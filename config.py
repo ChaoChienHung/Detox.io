@@ -20,10 +20,13 @@ ROBERTA_CACHE = os.path.join(MODEL_CACHE, "language", "XLM-Roberta")
 ROBERTA_TOKENIZER_CACHE = os.path.join(TOKENIZER_CACHE, "language", "XLM-Roberta")
 
 # -------------------------------
-# Bert Directories
+# Toxic Model Directories
 # -------------------------------
-BERT_CACHE = os.path.join(MODEL_CACHE, "toxic", "Bert")
-BERT_TOKENIZER_CACHE = os.path.join(TOKENIZER_CACHE, "toxic", "Bert")
+TOXIC_MODEL_CACHE = os.path.join(MODEL_CACHE, "toxic")
+TOXIC_TOKENIZER_CACHE = os.path.join(TOKENIZER_CACHE, "toxic")
+
+BERT_CACHE = os.path.join(TOXIC_MODEL_CACHE, "Bert")
+BERT_TOKENIZER_CACHE = os.path.join(TOXIC_TOKENIZER_CACHE, "Bert")
 
 # -----------------
 # Model & Tokenizer

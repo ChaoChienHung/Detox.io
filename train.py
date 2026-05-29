@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 from transformers import (
-    BertTokenizer, BertForSequenceClassification, Trainer, TrainingArguments,
+    AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments,
     EarlyStoppingCallback
 )
 
@@ -28,10 +28,10 @@ train_df, val_df = train_test_split(data, test_size=0.1, random_state=42)
 
 
 # Train Dataset
-train_dataset = CommentDataset(data=train_df, tokenizer_name=TOKENIZER, tokenizer_cache=BERT_TOKENIZER_CACHE, cache_data=os.path.join(DATA_CACHE, "train_dataset.pt"))
+train_dataset = CommentDataset(data=train_df, tokenizer_name=TOKENIZER, tokenizer_cache=TOXIC_TOKENIZER_CACHE, cache_data=os.path.join(DATA_CACHE, "train_dataset.pt"))
 
 # Validation Dataset
-val_dataset = CommentDataset(data=val_df, tokenizer_name=TOKENIZER, tokenizer_cache=BERT_TOKENIZER_CACHE, cache_data=os.path.join(DATA_CACHE, "val_dataset.pt"))
+val_dataset = CommentDataset(data=val_df, tokenizer_name=TOKENIZER, tokenizer_cache=TOXIC_TOKENIZER_CACHE, cache_data=os.path.join(DATA_CACHE, "val_dataset.pt"))
 
 # Create DataLoader
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
@@ -39,7 +39,8 @@ train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 os.makedirs(MODEL_CACHE, exist_ok=True)
 os.makedirs(TOKENIZER_CACHE, exist_ok=True)
 
-os.makedirs(BERT_CACHE, exist_ok=True)
+os.makedirs(TOXIC_MODEL_CACHE, exist_ok=True)
+os.makedirs(TOXIC_TOKENIZER_CACHE, exist_ok=True)
 
 
 # -----------------
@@ -62,17 +63,17 @@ print(f"Training device: {device}")
 # -----------------
 # Tokenizer
 # -----------------
-tokenizer = BertTokenizer.from_pretrained(MODEL, cache_dir=BERT_TOKENIZER_CACHE)
+tokenizer = AutoTokenizer.from_pretrained(TOKENIZER, cache_dir=TOXIC_TOKENIZER_CACHE)
 
 # -----------------
 # Model Setup
 # -----------------
-model = BertForSequenceClassification.from_pretrained(
-    MODEL, num_labels=6, problem_type="multi_label_classification", cache_dir=BERT_CACHE
+model = AutoModelForSequenceClassification.from_pretrained(
+    MODEL, num_labels=6, problem_type="multi_label_classification", cache_dir=TOXIC_MODEL_CACHE
 ).to(device)
 
 training_args = TrainingArguments(
-    output_dir=os.path.join(BERT_CACHE, CURRENT_TIME, "checkpoints"),
+    output_dir=os.path.join(TOXIC_MODEL_CACHE, CURRENT_TIME, "checkpoints"),
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=BATCH_SIZE_TRAIN,
     per_device_eval_batch_size=BATCH_SIZE_EVAL,
@@ -104,4 +105,6 @@ trainer = Trainer(
 )
 
 trainer.train()
-trainer.save_model(os.path.join(BERT_CACHE, CURRENT_TIME, "best"))
+best_dir = os.path.join(TOXIC_MODEL_CACHE, CURRENT_TIME, "best")
+trainer.save_model(best_dir)
+tokenizer.save_pretrained(best_dir)

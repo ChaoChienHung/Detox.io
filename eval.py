@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from config import *
 from dataset import CommentDataset
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_curve, auc
 
 # ------------------------
@@ -21,8 +21,15 @@ print("-" * 38)
 print("🔹 Loading tokenizer and model...")
 print("-" * 38)
 
-tokenizer = BertTokenizer.from_pretrained(MODEL_PATH)
-model = BertForSequenceClassification.from_pretrained(MODEL_PATH)
+if os.path.isdir(MODEL_PATH) and os.path.exists(os.path.join(MODEL_PATH, "model")):
+    tokenizer_dir = MODEL_PATH
+    model_dir = os.path.join(MODEL_PATH, "model")
+else:
+    tokenizer_dir = MODEL_PATH
+    model_dir = MODEL_PATH
+
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir)
+model = AutoModelForSequenceClassification.from_pretrained(model_dir)
 
 model.to(DEVICE)
 model.eval()
@@ -39,7 +46,7 @@ test_data = pd.read_csv(os.path.join(DATA_DIR, "test.csv"))
 test_dataset = CommentDataset(
     data=test_data,
     tokenizer_name=TOKENIZER,
-    tokenizer_cache=BERT_TOKENIZER_CACHE,
+    tokenizer_cache=TOXIC_TOKENIZER_CACHE,
     cache_data=os.path.join(DATA_CACHE, "test_dataset.pt")
 )
 

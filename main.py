@@ -7,7 +7,7 @@ from typing import Literal
 
 from config import *
 from openai import OpenAI
-from transformers import BertTokenizer, BertForSequenceClassification, AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 # -----------------
 # OpenAI Agent
@@ -136,19 +136,25 @@ if __name__ == "__main__":
     print("-" * 40)
 
 
-    # Load trained BERT model if exists; otherwise, fallback to base model
+    # Load trained model if exists; otherwise, fallback to base model
     if os.path.exists(MODEL_PATH):
-        tokenizer = BertTokenizer.from_pretrained(MODEL_PATH)
-        model = BertForSequenceClassification.from_pretrained(MODEL_PATH)
+        if os.path.isdir(MODEL_PATH) and os.path.exists(os.path.join(MODEL_PATH, "model")):
+            tokenizer_dir = MODEL_PATH
+            model_dir = os.path.join(MODEL_PATH, "model")
+        else:
+            tokenizer_dir = MODEL_PATH
+            model_dir = MODEL_PATH
+
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir)
+        model = AutoModelForSequenceClassification.from_pretrained(model_dir)
         
     else:
-        # Load BERT tokenizer
-        tokenizer = BertTokenizer.from_pretrained(TOKENIZER, cache_dir=BERT_TOKENIZER_CACHE)
-        model = BertForSequenceClassification.from_pretrained(
+        tokenizer = AutoTokenizer.from_pretrained(TOKENIZER, cache_dir=TOXIC_TOKENIZER_CACHE)
+        model = AutoModelForSequenceClassification.from_pretrained(
             MODEL,
             num_labels=6, 
             problem_type="multi_label_classification", 
-            cache_dir=BERT_CACHE
+            cache_dir=TOXIC_MODEL_CACHE
         )
 
     model.to(DEVICE)
