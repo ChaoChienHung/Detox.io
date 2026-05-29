@@ -1,13 +1,9 @@
 import os
 import wandb
 import torch
-import datetime
 import pandas as pd
 from config import *
-from tqdm import tqdm
-from torch.optim import AdamW
 from dataset import CommentDataset
-from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
@@ -32,9 +28,6 @@ train_dataset = CommentDataset(data=train_df, tokenizer_name=TOKENIZER, tokenize
 
 # Validation Dataset
 val_dataset = CommentDataset(data=val_df, tokenizer_name=TOKENIZER, tokenizer_cache=TOXIC_TOKENIZER_CACHE, cache_data=os.path.join(DATA_CACHE, "val_dataset.pt"))
-
-# Create DataLoader
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 
 os.makedirs(MODEL_CACHE, exist_ok=True)
 os.makedirs(TOKENIZER_CACHE, exist_ok=True)

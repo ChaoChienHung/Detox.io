@@ -34,6 +34,14 @@ Training is delegated to Sesame (git submodule under `third_party/sesame/`) to r
 
 We treat Sesame as a “training toolkit” rather than part of the app runtime logic.
 
+### 3b) Optional LLM workflow delegated to Karen
+LLM experimentation / fine-tuning is delegated to Karen (git submodule under `third_party/karen/`):
+
+- Karen focuses on LLM training utilities and run directory conventions.
+- This repo treats Karen as an optional tooling dependency.
+
+At runtime, local LLM inference is supported via `AutoModelForCausalLM.from_pretrained(...)` when `DETOXIFY_BACKEND=local_llm` or `TOXICITY_BACKEND=local_llm`.
+
 ### 4) Output layout compatibility
 Sesame’s trainer engine saves:
 - tokenizer to `<run_dir>/`
@@ -64,10 +72,21 @@ We keep caches under `cache/` to avoid mixing source code with artifacts:
 
 Names like `TOXIC_MODEL_CACHE` are intentionally model-agnostic; older `BERT_*` constants remain for compatibility and migration.
 
+## Backend selection tradeoffs
+The runtime pipeline supports:
+
+- `TOXICITY_BACKEND=classifier`: fastest and most stable, but requires a supervised classifier checkpoint.
+- `TOXICITY_BACKEND=openai`: no local model management, but adds latency/cost and requires API access.
+- `TOXICITY_BACKEND=local_llm`: local-only operation, but requires GPU resources and careful prompt/output robustness.
+
+Detoxification supports:
+
+- `DETOXIFY_BACKEND=openai`: strongest generalization, but external dependency.
+- `DETOXIFY_BACKEND=local_llm`: keeps everything local, but depends heavily on the fine-tuned model quality and resource budget.
+
 ## “Legacy scripts” stance
 This repo still contains `train.py` / `eval.py` for convenience, but the preferred workflow is:
 - use Sesame CLI for training/evaluation
 - use this repo’s `main.py` for inference + OpenAI detoxification
 
 This keeps the application stable while letting the training surface iterate faster.
-

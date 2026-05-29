@@ -11,6 +11,7 @@ CommentDetoxifier/
 ├── eval.py                 # Legacy: evaluate a trained model (AutoModel*), prefer Sesame CLI
 ├── main.py                 # Main inference & detoxification pipeline
 ├── third_party/sesame/      # Git submodule: Sesame (BERT-family training framework)
+├── third_party/karen/       # Git submodule: Karen (LLM training framework)
 ├── requirements.txt        # Python dependencies
 ├── DevNotes.md             # Design notes, philosophy, tradeoffs
 └── README.md               # Project overview and usage instructions
@@ -29,7 +30,7 @@ CommentDetoxifier/
   Orchestrates the complete detoxification pipeline. Combines a Transformer-based toxicity detector with an OpenAI LLM to automatically transform toxic comments into acceptable language. Includes model loading, tokenization, toxicity inference, LLM-based detoxification, logging, and robust retry mechanisms.
 
 - **`model.py`**  
-  Defines the architecture of the toxicity detection model. Currently implements a BERT-based classifier for multi-label toxicity detection.
+  Legacy module kept for reference. The current runtime uses Hugging Face `AutoModel*` loaders.
 
 - **`train.py`**  
   Trains a multi-label classifier across six categories: `toxic`, `severe_toxic`, `obscene`, `threat`, `insult`, and `identity_hate`. Uses Hugging Face’s `Trainer` API and integrates with W&B for experiment tracking and logging.
@@ -79,6 +80,33 @@ Set `MODEL_PATH` in `config.py` to the run directory:
 - `MODEL_PATH = os.path.join(TOXIC_MODEL_CACHE, "toxic_bert_v1")`
 
 `main.py` will automatically detect whether the directory contains a `model/` subfolder (Sesame layout) and load accordingly.
+
+## Karen Integration (Optional LLM Workflow)
+
+This repo also includes Karen as a git submodule under `third_party/karen/`. Karen provides a unified CLI for fine-tuning / experimenting with LLMs.
+
+Initialize:
+
+```bash
+git submodule update --init --recursive
+python3 -m pip install -e third_party/karen
+```
+
+If you want to use a locally fine-tuned LLM at runtime, `main.py` supports the `local_llm` backend. Set:
+
+- `DETOXIFY_BACKEND=local_llm`
+- `LOCAL_LLM_RUN_DIR=<path to a Karen run dir>` (contains tokenizer files and a `model/` subfolder), or `LOCAL_LLM_MODEL_DIR=<path to a HF model dir>`
+
+## Runtime Backends
+
+`main.py` supports pluggable backends via environment variables:
+
+- `TOXICITY_BACKEND`: `classifier` (default), `openai`, `local_llm`
+- `DETOXIFY_BACKEND`: `openai` (default), `local_llm`
+
+Local LLM settings:
+
+- `LOCAL_LLM_RUN_DIR`, `LOCAL_LLM_MODEL_DIR`, `LOCAL_LLM_MAX_NEW_TOKENS`
 
 For design rationale and tradeoffs, see [DevNotes.md](DevNotes.md).
 

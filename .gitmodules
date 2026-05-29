@@ -1,3 +1,6 @@
 [submodule "third_party/sesame"]
 	path = third_party/sesame
 	url = https://github.com/ChaoChienHung/Sesame.git
+[submodule "third_party/karen"]
+	path = third_party/karen
+	url = https://github.com/ChaoChienHung/Karen.git
