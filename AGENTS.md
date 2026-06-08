@@ -117,12 +117,18 @@
 - /docs/operations.md：部署/維運、資源策略、日誌與健康檢查
 - /docs/dev-notes.md：設計哲學與取捨脈絡（偏背景，不作為契約 SSOT）
 
-## 6. 專屬指令處理模塊（文件更新）
+## 文檔更新指令處理模塊
 
-當使用者提出「請協助更新項目的相關文檔」或等價需求時，遵循以下處理流程：
+本模塊的目標是降低協作成本：在完成 feature/refactor/任何 repo 變更之後，不必每次把所有文檔全量重讀，而是以 `docs/doc-map.md` 作為索引，僅更新「受影響」的文檔並保持一致性。
 
-- 先盤點本倉庫內所有文檔狀態（root：AGENTS.md / README.md / TODO.md；docs/：其餘規格文件；skills/：agent skills）
-- 依 docs/doc-map.md 的文件屬性與關係，篩選出需要更新的文件並排序優先級
-  - 介面/契約相關（api.md、runtime-backends.md、development.md）優先於背景脈絡（dev-notes.md）
-  - 若需求涉及「如何協作/如何守門」，優先更新 AGENTS.md 與 docs/doc-map.md
-- 允許分階段完成：不要求一次性完成所有文件調整，但每次調整需同步更新相關索引（docs/doc-map.md 與本文件的 Doc Map 段落）
+### 觸發時機
+
+- 當完成任何 repo 變更（feature/refactor/bugfix/文檔調整）後，需主動評估是否要同步更新文檔
+- 當使用者提出「請協助更新項目的相關文檔」類需求時，需按下列流程處理
+
+### 流程
+
+- 變更盤點：先看此次變更影響到哪些面向（CLI/訓練輸出/評估輸出/dataset pipeline/benchmark recipe/目錄結構/檔名）
+- 以 `docs/doc-map.md` 作為入口：根據 doc-map 的職責邊界，定位需要更新的最小文件集合
+- 分段交付：允許分多輪完成，不要求一次性調整完所有文檔
+- 索引同步：每次有文檔新增/遷移/更名/職責變更，必須同步更新 `docs/doc-map.md` 與本文件的 `doc-map` 模組
