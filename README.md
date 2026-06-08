@@ -2,9 +2,46 @@
 
 **CommentDetoxifier** is a system designed to detect and neutralize harmful online comments. It identifies hateful, abusive, or threatening speech and transforms it into socially acceptable language — preserving the original context and intent.
 
+## Quickstart（最小可跑）
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+cp .env.example .env
+python3 main.py
+```
+
+若你需要訓練工具（推薦），再初始化 submodules：
+
+```bash
+git submodule update --init --recursive
+python3 -m pip install -e third_party/sesame
+python3 -m pip install -e third_party/karen
+```
+
+## Documentation
+
+- 協作規範與角色分工：AGENTS.md
+- 文件索引入口：docs/doc-map.md
+- 架構：docs/architecture.md
+- 開發與環境變數：docs/development.md
+- Runtime 後端：docs/runtime-backends.md
+- API 契約（草案）：docs/api.md
+- 訓練流程：docs/training.md
+- 資料與隱私：docs/data.md
+- 評估與安全：docs/evaluation-safety.md
+- 維運：docs/operations.md
+- 設計脈絡：docs/dev-notes.md
+- Agent skills 存放位置：skills/
+
 ## Project Structure
 ```bash
 CommentDetoxifier/
+├── AGENTS.md               # Team roles, ownership, collaboration rules
+├── docs/                   # Architecture / API / Dev / Training / Safety docs
+├── skills/                 # Agent skills (for scaling agent workflows)
+├── .env.example            # Environment variables template
 ├── config.py               # Project constants, hyperparameters, paths, device setup
 ├── dataset.py              # Custom PyTorch Dataset for multi-label toxicity detection
 ├── train.py                # Legacy: train a multi-label classifier (AutoModel*), prefer Sesame CLI
@@ -13,7 +50,6 @@ CommentDetoxifier/
 ├── third_party/sesame/      # Git submodule: Sesame (BERT-family training framework)
 ├── third_party/karen/       # Git submodule: Karen (LLM training framework)
 ├── requirements.txt        # Python dependencies
-├── DevNotes.md             # Design notes, philosophy, tradeoffs
 └── README.md               # Project overview and usage instructions
 ```
 
@@ -35,68 +71,6 @@ CommentDetoxifier/
 - **`train.py`**  
   Trains a multi-label classifier across six categories: `toxic`, `severe_toxic`, `obscene`, `threat`, `insult`, and `identity_hate`. Uses Hugging Face’s `Trainer` API and integrates with W&B for experiment tracking and logging.
 
-## Sesame Integration (Recommended Training Workflow)
-
-This repo uses Hugging Face Transformers for inference and keeps a clean fallback contract:
-
-- If `MODEL_PATH` exists, load your locally trained model first.
-- Otherwise, fall back to Hugging Face pretrained weights (`MODEL` / `TOKENIZER` in `config.py`).
-
-To make training and model swapping easier, this repo includes [Sesame](https://github.com/ChaoChienHung/Sesame.git) as a git submodule under `third_party/sesame/`. Sesame provides a unified CLI to train BERT-family models (BERT/RoBERTa/...) with a consistent output layout.
-
-### 1) Initialize submodule
-
-```bash
-git submodule update --init --recursive
-python3 -m pip install -e third_party/sesame
-```
-
-### 2) Train with Sesame and write outputs into this repo’s cache
-
-Example: multi-label classification for Detox.io schema, outputs to `cache/models/toxic/<run_name>/`.
-
-```bash
-python3 -m bert.train \
-  --task multilabel_classification \
-  --arch bert \
-  --engine trainer \
-  --train_file data/train_10k.csv \
-  --output_dir cache/models/toxic \
-  --dataset_cache_dir cache/datasets \
-  --tokenizer_cache_dir cache/tokenizers/toxic \
-  --model_cache_dir cache/models/hf \
-  --run_name toxic_bert_v1
-```
-
-Sesame’s trainer engine saves:
-
-- model weights to `cache/models/toxic/<run_name>/model/`
-- tokenizer to `cache/models/toxic/<run_name>/`
-
-### 3) Point inference to the trained model
-
-Set `MODEL_PATH` in `config.py` to the run directory:
-
-- `MODEL_PATH = os.path.join(TOXIC_MODEL_CACHE, "toxic_bert_v1")`
-
-`main.py` will automatically detect whether the directory contains a `model/` subfolder (Sesame layout) and load accordingly.
-
-## Karen Integration (Optional LLM Workflow)
-
-This repo also includes Karen as a git submodule under `third_party/karen/`. Karen provides a unified CLI for fine-tuning / experimenting with LLMs.
-
-Initialize:
-
-```bash
-git submodule update --init --recursive
-python3 -m pip install -e third_party/karen
-```
-
-If you want to use a locally fine-tuned LLM at runtime, `main.py` supports the `local_llm` backend. Set:
-
-- `DETOXIFY_BACKEND=local_llm`
-- `LOCAL_LLM_RUN_DIR=<path to a Karen run dir>` (contains tokenizer files and a `model/` subfolder), or `LOCAL_LLM_MODEL_DIR=<path to a HF model dir>`
-
 ## Runtime Backends
 
 `main.py` supports pluggable backends via environment variables:
@@ -108,7 +82,9 @@ Local LLM settings:
 
 - `LOCAL_LLM_RUN_DIR`, `LOCAL_LLM_MODEL_DIR`, `LOCAL_LLM_MAX_NEW_TOKENS`
 
-For design rationale and tradeoffs, see [DevNotes.md](DevNotes.md).
+Training workflows (Sesame / Karen) are documented in docs/training.md.
+
+For design rationale and tradeoffs, see docs/dev-notes.md.
 
 ## Key Improvements
 1. Model Swappability
